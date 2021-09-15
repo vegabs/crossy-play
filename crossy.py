@@ -7,6 +7,18 @@ def nothing(x):
     pass
 
 
+def addPNG(pngFile, goalImage, x1, y1):
+    pngImage = cv2.imread(pngFile, -1)
+    w, h = pngImage.shape[:2]
+    b, g, r, a = cv2.split(pngImage)
+    mask = np.dstack((a, a, a))
+    pngImage = np.dstack((b, g, r))
+
+    # x1,y1 son la esquina superior izquierda desde donde se va a dibujar
+    roi = goalImage[int(y1-h/2):int((y1-h/2)+h), int(x1-w/2):int((x1-w/2)+w)]
+    roi[mask > 0] = pngImage[mask > 0]
+
+
 # slider
 cv2.namedWindow('slider')
 cv2.createTrackbar('Vmin', 'slider', 66, 255, nothing)
@@ -25,11 +37,23 @@ right_available = True
 up_available = True
 down_available = True
 
+# img
+RIGHT_IMG = "right-arrow.png"
+LEFT_IMG = "left-arrow.png"
+DOWN_IMG = "down-arrow.png"
+UP_IMG = "up-arrow.png"
+
 camera = cv2.VideoCapture(0)
 while(True):
     available, frame = camera.read()
     height = frame.shape[0]  # 480
     width = frame.shape[1]  # 640
+
+    # rangos
+    rangoiz = int(width*.3)
+    rangoder = int(width*.7)
+    rangosup = int(height*.3)
+    rangoinf = int(height*.7)
 
     if (available == True):
         frame = cv2.flip(frame, 1)  # mirror mode
@@ -54,37 +78,55 @@ while(True):
         if(M['m00'] > 1000):
             cx = int(M['m10']/M['m00'])
             cy = int(M['m01']/M['m00'])
-            
+
             # draw lines
-            frame = cv2.circle(frame,(cx,cy),5,(0,255,0))
-            
-            if((0 < cx < 200) and left_available):
+            frame = cv2.circle(frame, (cx, cy), 10, (255, 255, 255), 3)
+
+            if((0 < cx < rangoiz) and left_available):
                 keyboard.press_and_release("left")
                 left_available = False
-                
-            elif( (440 < cx < 640) and right_available):
+
+            elif((rangoder < cx < width) and right_available):
                 keyboard.press_and_release("right")
                 right_available = False
-                
-            elif ((200 <= cx <= 440) and (cy < 160) and up_available):
+
+            elif ((rangoiz <= cx <= rangoder) and (cy < rangosup) and up_available):
                 keyboard.press_and_release("up")
                 up_available = False
-                
-            elif ((200 <= cx <= 440) and (cy > 320) and down_available):
+
+            elif ((rangoiz <= cx <= rangoder) and (cy > rangoinf) and down_available):
                 keyboard.press_and_release("down")
                 down_available = False
-                
-            elif((200 <= cx <= 440) and (160 <= cy <= 320)):
+
+            elif((rangoiz <= cx <= rangoder) and (rangosup <= cy <= rangoinf)):
                 left_available = True
                 right_available = True
                 up_available = True
                 down_available = True
-            
-        # draw
-        frame = cv2.line(frame,(200,0),(200,480),(0,255,0))
-        frame = cv2.line(frame,(440,0),(440,480),(0,255,0))
-        frame = cv2.line(frame,(200,160),(440,160),(0,255,0))
-        frame = cv2.line(frame,(200,320),(440,320),(0,255,0))
+
+            # draw arrow
+            if((0 < cx < rangoiz)):
+                addPNG(LEFT_IMG, frame, int(width*0.15), int(height*.5))
+
+            elif((rangoder < cx < width)):
+                addPNG(RIGHT_IMG, frame, int(width*0.85), int(height*.5))
+
+            elif ((rangoiz <= cx <= rangoder) and (cy < rangosup)):
+                addPNG(UP_IMG, frame, int(width*0.50), int(height*.15))
+
+            elif ((rangoiz <= cx <= rangoder) and (cy > rangoinf)):
+                addPNG(DOWN_IMG, frame, int(width*0.50), int(height*.85))
+
+            # draw
+            frame = cv2.line(frame,  (rangoiz, 0),
+                             (rangoiz, height), (55, 75, 240), 2)
+            frame = cv2.line(frame, (rangoder, 0),
+                             (rangoder, height), (55, 75, 240), 2)
+            frame = cv2.line(frame,  (rangoiz, rangosup),
+                             (rangoder, rangosup), (55, 75, 240), 2)
+            frame = cv2.line(frame,  (rangoiz, rangoinf),
+                             (rangoder, rangoinf), (55, 75, 240), 2)
+
         cv2.imshow('Capture', frame)
         cv2.imshow('Capture_HSV', segmented)
     else:
