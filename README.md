@@ -1,10 +1,5 @@
 # Crossy Road
 Play Crossy Road using the camera.
 
-- [x] conectarse a la camara
-- [x] obtener las dimensiones
-- [x] centroide de objeto azul
-- [x] presionar la flecha izquierda
-- [x] presionar la flecha derecha
-- [ ] si el centroide se sale -> recuerde ultimo punto
-- [ ] agrandar los margenes
+## Demo video
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/YOUTUBE_VIDEO_ID_HERE/0.jpg)](https://www.youtube.com/watch?v=dOxE043OIB8 "Play Crossy Road using camera with OpenCV")
